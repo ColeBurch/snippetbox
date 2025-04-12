@@ -22,6 +22,7 @@ type application struct {
 }
 
 func main() {
+	addr := ":8000"
 	connStr := "user=myuser dbname=mydb password=mypassword host=localhost port=5432 sslmode=disable"
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
 
@@ -50,8 +51,14 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
+	srv := &http.Server{
+		Addr:     addr,
+		Handler:  app.routes(),
+		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
+	}
+
 	logger.Info("starting server on :8000")
-	err = http.ListenAndServe(":8000", app.routes())
+	err = srv.ListenAndServe()
 	logger.Error(err.Error())
 	os.Exit(1)
 }
